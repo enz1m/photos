@@ -1,0 +1,11 @@
+/target/
+/AGENTS/
+*.log
+/framework/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.profraw
+*.profdata

@@ -1,0 +1,85 @@
+[package]
+name = "enz-photos"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+authors = ["enzUI contributors"]
+description = "A local-first photo library and editor for the enzUI desktop"
+repository = "https://github.com/enz1m/photos"
+publish = false
+
+[workspace]
+members = ["crates/photos-library"]
+resolver = "3"
+
+[dependencies]
+photos-library = { path = "crates/photos-library" }
+iced = { git = "https://github.com/enz1m/enzim-iced.git", rev = "67f991b7442cbd79821141069c3b864cc12413f2", default-features = false, features = ["wgpu", "tiny-skia", "crisp", "web-colors", "thread-pool", "linux-theme-detection", "wayland", "canvas", "svg", "a11y", "tokio", "image-without-codecs"] }
+enzui-iced-core = { package = "enzui-core", features = ["accesskit", "portal-dbus"], git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+enzui-iced-theme = { package = "enzui-theme", git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+enzui-iced-widgets = { package = "enzui-widgets", features = ["portal-dbus", "application-dbus"], git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+enzui-iced-resources = { package = "enzui-resources", default-features = false, features = ["heif"], git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+enzui-iced-wayland = { package = "enzui-wayland", git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "bmp", "gif", "tiff", "ico", "pnm", "tga", "qoi", "hdr", "exr"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+enzui-services = { features = ["gstreamer", "secret-service"], git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+curl = { version = "0.4.50", default-features = false, features = ["ssl"] }
+url = "2"
+sha2 = "0.10"
+rustix = { version = "1.1", features = ["fs"] }
+tempfile = "3"
+moxcms = "0.8"
+enzui-parent-lease = { git = "https://github.com/enz1m/enzui.git", tag = "v0.1.0-alpha.1" }
+
+[dev-dependencies]
+iced_test = { git = "https://github.com/enz1m/enzim-iced.git", rev = "67f991b7442cbd79821141069c3b864cc12413f2" }
+iced_runtime = { git = "https://github.com/enz1m/enzim-iced.git", rev = "67f991b7442cbd79821141069c3b864cc12413f2" }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = 0
+incremental = false
+
+[profile.dev.package.photos-library]
+opt-level = 2
+
+[profile.test]
+debug = 0
+
+[profile.test.package."*"]
+opt-level = 2
+
+[profile.test.package.photos-library]
+opt-level = 2
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+
+[patch.crates-io]
+zbus_macros = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+zbus_names = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+zvariant = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+zvariant_derive = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+zvariant_utils = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+zbus = { git = "https://github.com/enz1m/enzim-zbus.git", rev = "815a9ca7b64aa24e14ccb6ea3f7eda97ef7bbc8a" }
+winit = { git = "https://github.com/enz1m/enzim-winit.git", rev = "f6ce16941bf815a438db7e628ab1126ce48e31dd" }
+
+[features]
+x11 = ["iced/x11", "enzui-iced-widgets/x11"]
