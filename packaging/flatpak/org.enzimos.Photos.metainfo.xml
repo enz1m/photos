@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<component type="desktop-application">
+  <id>org.enzimos.Photos</id>
+  <name>Photos</name>
+  <summary>Browse, organize, and edit photos</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.enz1m">
+    <name>enzUI contributors</name>
+  </developer>
+  <launchable type="desktop-id">org.enzimos.Photos.desktop</launchable>
+  <content_rating type="oars-1.1" />
+  <description>
+    <p>Browse photos and videos, organize albums, and make edits without changing the original image. Photos can also connect to an Immich library.</p>
+  </description>
+  <url type="homepage">https://github.com/enz1m/photos</url>
+  <url type="bugtracker">https://github.com/enz1m/photos/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/enz1m/photos/73e6d52f99f8caffdd207b9402a898676c6ba911/docs/screenshots/basic-dark.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="0.1.1" date="2026-11-20">
+      <description>
+        <p>Add Flatpak packaging for enzim Apps.</p>
+      </description>
+    </release>
+  </releases>
+</component>

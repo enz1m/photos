@@ -1,0 +1,108 @@
+{
+  "app-id": "org.enzimos.Photos",
+  "branch": "stable",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "26.08",
+  "sdk": "org.freedesktop.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "command": "enz-photos",
+  "finish-args": [
+    "--socket=wayland",
+    "--device=dri",
+    "--share=network",
+    "--socket=pulseaudio",
+    "--talk-name=org.freedesktop.secrets",
+    "--filesystem=xdg-pictures",
+    "--filesystem=xdg-videos:ro"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin"
+  },
+  "modules": [
+    {
+      "name": "photos",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo build --locked --offline --release --jobs \"${FLATPAK_BUILDER_N_JOBS:-2}\" --bin enz-photos",
+        "install -Dm755 target/release/enz-photos /app/bin/enz-photos",
+        "install -Dm644 assets/org.enzimos.Photos.desktop /app/share/applications/org.enzimos.Photos.desktop",
+        "install -Dm644 packaging/flatpak/org.enzimos.Photos.metainfo.xml /app/share/metainfo/org.enzimos.Photos.metainfo.xml",
+        "install -Dm644 assets/org.enzimos.Photos.svg /app/share/icons/hicolor/scalable/apps/org.enzimos.Photos.svg",
+        "install -Dm644 LICENSE /app/share/licenses/org.enzimos.Photos/LICENSE",
+        "install -Dm644 assets/org.enzimos.Photos-mime.xml /app/share/mime/packages/org.enzimos.Photos.xml",
+        "install -Dm644 vendor/gst-curl/LICENSE-MIT /app/share/licenses/org.enzimos.Photos/gst-curl/LICENSE-MIT",
+        "install -Dm644 vendor/gst-curl/UPSTREAM.json /app/share/licenses/org.enzimos.Photos/gst-curl/UPSTREAM.json"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/enz1m/photos.git",
+          "commit": "@ENZIM_SOURCE_COMMIT@",
+          "disable-submodules": true
+        },
+        {
+          "type": "archive",
+          "url": "https://github.com/enz1m/photos/releases/download/v0.1.1/photos-cargo-vendor-0.1.1.tar.xz",
+          "sha256": "ee96b12179be433febbb43de7cf859c5864f9b35dececfce739451c1320220a8",
+          "strip-components": 1
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzim-winit/40eeb41f8637ef1620afa377ba006874224b6d65/wayland-protocols/xdg-session-management-v1.xml",
+          "sha256": "3674591ca8e68f76297c535e8edd6783d84b59086c38ebe08ff5ff1f2dec5bae",
+          "dest": "vendor/winit-0.30.13/wayland-protocols"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/curltask.h",
+          "sha256": "7f1345be5a02f64e31c60c18c4efd7adff4a27707451ccbf136808d296cccbc8",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/gstcurldefaults.h",
+          "sha256": "aa2f2b5d93dec5e4fa01f2bf7461d3bb5e172eb72353090a696769f2b1fbebb9",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/gstcurlhttpsrc.c",
+          "sha256": "0d98ec1340d2925e47522535c5bc2b502aeddfd4f2294a6c5ec04aa3b3bb3449",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/gstcurlhttpsrc.h",
+          "sha256": "939de61e58a61e1da2c59c90919f792c16daf95433cd84a7533f705d964026ef",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/gstcurlqueue.c",
+          "sha256": "7969732900f1471c0bb97ee2b91be3a0e6574643e47b8dc70e774ce2b586d7fb",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/gstcurlqueue.h",
+          "sha256": "79d4f47039fd10fcf6cd5df148ecfa5cec83bd96da8f59596f283c680d5a5452",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/LICENSE-MIT",
+          "sha256": "2d0aca3b536e1a2b45061c368cffe4a388aa75f3baa1dfc93636dba8945de78a",
+          "dest": "vendor/gst-curl"
+        },
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/enz1m/enzui/7275e9a2e99ad0ca9342c179a2cda31e1840a2a3/vendor/gst-curl/UPSTREAM.json",
+          "sha256": "10a2d7dec4d14f642a8c3840b56e958b9a7c676a9855bb9c60c35affbc5d79a2",
+          "dest": "vendor/gst-curl"
+        }
+      ]
+    }
+  ]
+}
