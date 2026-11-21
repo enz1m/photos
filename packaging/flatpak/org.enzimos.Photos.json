@@ -45,7 +45,7 @@
         {
           "type": "archive",
           "url": "https://github.com/enz1m/photos/releases/download/v0.1.1/photos-cargo-vendor-0.1.1.tar.xz",
-          "sha256": "ee96b12179be433febbb43de7cf859c5864f9b35dececfce739451c1320220a8",
+          "sha256": "5e5b4e1cab4c211d8bf0245929a58a20b3947e6fa65d350fe91724a906798a89",
           "strip-components": 1
         },
         {
