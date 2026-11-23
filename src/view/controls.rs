@@ -1,4 +1,7 @@
-use enzui_iced_widgets::tab_pill::{TabLabelWeight, TabListWidth, TabPillItem, enz_tab_list};
+use enzui_iced_theme::Palette;
+use enzui_iced_widgets::tab_pill::{
+    TabLabelWeight, TabListWidth, TabPillItem, TabPillTokens, TabSelectionStyle, enz_tab_list,
+};
 use iced::{Element, Length};
 
 use crate::app::{Message, Photos};
@@ -19,6 +22,8 @@ pub(crate) fn glass_tabs<'a>(
         selected,
         on_select,
     )
+    // FilledAccent keeps the pinned selection colors when glass supplies its draw-time palette.
+    .selection_indicator(TabSelectionStyle::FilledAccent)
     .tokens(neutral_tab_tokens(app))
     .cell_min_width(cell_minimum)
     .label_weight(TabLabelWeight::AlwaysSemibold)
@@ -100,8 +105,7 @@ pub(crate) fn glass_chrome<'a>(content: impl Into<Element<'a, Message>>) -> Elem
 }
 
 fn tab_cell_minimum(app: &Photos, labels: &[(&str, &str)]) -> f32 {
-    let geometry =
-        enzui_iced_widgets::tab_pill::TabPillTokens::from_palette(&app.theme.theme().palette);
+    let geometry = TabPillTokens::from_palette(&app.theme.theme().palette);
     let typography = enzui_iced_widgets::text_measure::MeasureTypography::new(
         enzui_iced_widgets::text::TextSize::Body,
     )
@@ -117,40 +121,32 @@ fn tab_cell_minimum(app: &Photos, labels: &[(&str, &str)]) -> f32 {
 }
 
 pub(super) fn glass_tabs_width(app: &Photos, labels: &[(&str, &str)]) -> f32 {
-    let geometry =
-        enzui_iced_widgets::tab_pill::TabPillTokens::from_palette(&app.theme.theme().palette);
+    let geometry = TabPillTokens::from_palette(&app.theme.theme().palette);
     labels.len() as f32 * tab_cell_minimum(app, labels)
         + labels.len().saturating_sub(1) as f32 * geometry.strip_gap
         + 2.0 * TRACK_INSET
 }
 
-/// The gap between the glass track and the selected pill.
 const TRACK_INSET: f32 = 3.0;
 
-fn neutral_tab_tokens(app: &Photos) -> enzui_iced_widgets::tab_pill::TabPillTokens {
-    let palette = &app.theme.theme().palette;
-    let mut tokens = enzui_iced_widgets::tab_pill::TabPillTokens::from_palette(palette);
-    let wash = iced::Color {
-        a: if palette.is_dark() { 0.26 } else { 0.16 },
-        ..palette.accent
-    };
-    let wash = if enzui_iced_widgets::theme_lookup::material_policy(&app.theme()).forbids_material()
-    {
-        enzui_iced_widgets::color::mix(palette.surface, palette.accent, wash.a)
-    } else {
-        wash
-    };
-    tokens.selected_fg = tokens.unselected_fg;
-    tokens.segment_selected_fg = tokens.unselected_fg;
-    tokens.selected_bg = wash;
-    tokens.segment_selected_bg = wash;
-    tokens.segment_selected_hover_bg = wash;
-    tokens.segment_selected_pressed_bg = wash;
-    tokens.selected_edge = iced::Color::TRANSPARENT;
-    // Pinned tokens keep a fixed 9 px pill radius; the track is the theme's
-    // fully rounded button group, so the pill takes the theme's (full) button
-    // radius and stays concentric with it.
+fn neutral_tab_tokens(app: &Photos) -> TabPillTokens {
     let theme = app.theme.theme();
-    tokens.pill_radius = theme.radius.step(theme.shape.button);
-    tokens
+    let palette = &theme.palette;
+    let increased_contrast = palette.is_high_contrast()
+        || enzui_iced_widgets::theme_lookup::material_policy(&app.theme()).increased_contrast;
+    let selected_bg = palette.solid_backdrop(palette.surface_selected);
+    let contrast_floor = if increased_contrast { 7.0 } else { 4.5 };
+
+    TabPillTokens {
+        selected_bg,
+        selected_fg: Palette::brand_text_on_at(selected_bg, palette.text, contrast_floor),
+        selected_edge: if increased_contrast {
+            palette.text
+        } else {
+            iced::Color::TRANSPARENT
+        },
+        // Pinned tab tokens default to 9 px, so follow the surrounding track's shape.
+        pill_radius: theme.radius.step(theme.shape.button),
+        ..TabPillTokens::from_palette(palette)
+    }
 }
