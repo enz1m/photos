@@ -1,7 +1,4 @@
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
+use std::sync::{Arc, atomic::Ordering};
 
 use enzui_iced_widgets::file_drop::{DataDrop, DragAction, FileDrop};
 use iced::Task;
@@ -89,16 +86,7 @@ impl Photos {
             self.retain_native_drop(Receipt::File(receipt));
             return task;
         }
-        self.busy = true;
-        self.import_generation = self.import_generation.saturating_add(1);
-        let generation = self.import_generation;
-        let cancel = Arc::new(AtomicBool::new(false));
-        self.import_cancel = Some(Arc::clone(&cancel));
-        self.import_progress_hidden = false;
-        self.import_progress = Some(crate::services::import::ImportProgress {
-            completed: 0,
-            total: 0,
-        });
+        let (generation, cancel) = self.begin_import(0);
         let destination = folder
             .clone()
             .unwrap_or_else(|| self.import_destination().to_owned());
@@ -137,10 +125,7 @@ impl Photos {
                     generation,
                     album,
                     Receipt::File(receipt.clone()),
-                    settled
-                        .into_result()
-                        .map_err(|error| error.to_string())
-                        .and_then(|result| result),
+                    crate::services::import::settled(settled),
                 )
             }),
         ])
@@ -171,16 +156,7 @@ impl Photos {
         {
             return Task::none();
         }
-        self.busy = true;
-        self.import_generation = self.import_generation.saturating_add(1);
-        let generation = self.import_generation;
-        let cancel = Arc::new(AtomicBool::new(false));
-        self.import_cancel = Some(Arc::clone(&cancel));
-        self.import_progress_hidden = false;
-        self.import_progress = Some(crate::services::import::ImportProgress {
-            completed: 0,
-            total: 1,
-        });
+        let (generation, cancel) = self.begin_import(1);
         let destination = folder.unwrap_or_else(|| self.import_destination().to_owned());
         let layout = self.catalog.settings.import_layout;
         let data = receipt.data().clone();
@@ -209,10 +185,7 @@ impl Photos {
                     generation,
                     album,
                     Receipt::Image(receipt.clone()),
-                    settled
-                        .into_result()
-                        .map_err(|error| error.to_string())
-                        .and_then(|result| result),
+                    crate::services::import::settled(settled),
                 )
             }),
         ])

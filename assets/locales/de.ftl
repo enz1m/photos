@@ -1,6 +1,7 @@
 photos-title = Fotos
 photos-settings = Einstellungen
 photos-import = Fotos importieren
+photos-import-activity = Medien werden importiert
 photos-rescan = Fotos neu einlesen
 photos-search = Fotos suchen…
 photos-library = Mediathek

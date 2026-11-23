@@ -329,6 +329,7 @@ pub(crate) struct Photos {
     /// result is still reported. The next import shows its progress again.
     pub import_progress_hidden: bool,
     pub import_cancel: Option<Arc<std::sync::atomic::AtomicBool>>,
+    pub(super) import_activity: super::import_activity::ImportActivity,
     pub dialog: Option<Dialog>,
     pub dialogs: DialogStack<Dialog>,
     pub dialog_text: String,

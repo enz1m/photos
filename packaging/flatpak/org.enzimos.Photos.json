@@ -15,7 +15,8 @@
     "--socket=pulseaudio",
     "--talk-name=org.freedesktop.secrets",
     "--filesystem=xdg-pictures",
-    "--filesystem=xdg-videos:ro"
+    "--filesystem=xdg-videos:ro",
+    "--filesystem=xdg-run/enzui-activity:ro"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"

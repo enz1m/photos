@@ -1,7 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use enzui_iced_core::blocking_task::{BlockingTaskError, BlockingTaskSettlement};
 use photos_library::{raster, scan};
 
 #[derive(Debug, Default)]
@@ -17,6 +19,23 @@ pub(crate) struct ImportReport {
 pub(crate) struct ImportProgress {
     pub completed: usize,
     pub total: usize,
+}
+
+pub(crate) fn settled(
+    worker: BlockingTaskSettlement<Result<Arc<ImportReport>, String>>,
+) -> Result<Arc<ImportReport>, String> {
+    match worker.into_result() {
+        Ok(result) => result,
+        Err(BlockingTaskError::Cancelled) => Ok(Arc::new(cancelled_report())),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+fn cancelled_report() -> ImportReport {
+    ImportReport {
+        cancelled: true,
+        ..Default::default()
+    }
 }
 
 #[cfg(test)]
@@ -120,7 +139,9 @@ pub(crate) fn from_encoded_image(
             "dropped image is not a HEIF container"
         );
     }
-    anyhow::ensure!(!cancelled(), "image import cancelled");
+    if cancelled() {
+        return Ok(cancelled_report());
+    }
     let directory = tempfile::Builder::new()
         .prefix("enz-photos-drop-")
         .tempdir()?;
@@ -131,12 +152,18 @@ pub(crate) fn from_encoded_image(
         .mode(0o600)
         .open(&path)?;
     for chunk in bytes.chunks(64 * 1024) {
-        anyhow::ensure!(!cancelled(), "image import cancelled");
+        if cancelled() {
+            return Ok(cancelled_report());
+        }
         file.write_all(chunk)?;
     }
     file.flush()?;
     if format.is_none() {
-        super::formats::decode(&path, bytes, Some(1), &cancelled)?;
+        let decoded = super::formats::decode(&path, bytes, Some(1), &cancelled);
+        if cancelled() {
+            return Ok(cancelled_report());
+        }
+        decoded?;
     }
     from_paths_organized(&[path], destination, layout, cancelled, progress)
 }
@@ -235,6 +262,7 @@ fn import_scanned(
             report.cancelled = true;
             break;
         }
+        let copy_cancelled = std::cell::Cell::new(false);
         let result = (|| {
             let target = if let Some(session) = &session {
                 session.clone()
@@ -248,10 +276,18 @@ fn import_scanned(
             } else {
                 destination.to_path_buf()
             };
-            copy_photo(&photo.path, &target, &cancelled)
+            copy_photo(&photo.path, &target, || {
+                let stop = cancelled();
+                copy_cancelled.set(stop);
+                stop
+            })
         })();
         match result {
             Ok(path) => report.paths.push(path),
+            Err(_) if copy_cancelled.get() => {
+                report.cancelled = true;
+                break;
+            }
             Err(error) => {
                 report.skipped += 1;
                 if report.errors.len() < 20 {
@@ -518,7 +554,8 @@ mod tests {
                 || true,
                 |_| {}
             )
-            .is_err()
+            .expect("cancelled drop")
+            .cancelled
         );
         assert_eq!(
             fs::read_dir(&destination)
@@ -621,5 +658,44 @@ mod tests {
         assert_eq!(report.paths.len(), 1);
         assert_eq!(fs::read_dir(destination).expect("destination").count(), 1);
         assert_eq!(fs::read_dir(source).expect("source").count(), 3);
+    }
+
+    #[test]
+    fn cancellation_during_the_only_copy_is_not_a_failure() {
+        use std::cell::Cell;
+
+        let sandbox = tempfile::tempdir().expect("sandbox");
+        let source = sandbox.path().join("source");
+        let destination = sandbox.path().join("Photos");
+        fs::create_dir(&source).expect("source");
+        RgbaImage::new(4, 3)
+            .save(source.join("a.png"))
+            .expect("image");
+
+        let copying = Cell::new(false);
+        let polls = Cell::new(0);
+        let report = from_folder_with_progress(
+            &source,
+            &destination,
+            || {
+                if !copying.get() {
+                    return false;
+                }
+                polls.set(polls.get() + 1);
+                polls.get() > 3
+            },
+            |progress| copying.set(progress.total == 1 && progress.completed == 0),
+        )
+        .expect("import report");
+
+        assert!(report.cancelled);
+        assert!(report.errors.is_empty());
+        assert!(report.paths.is_empty());
+        assert!(
+            fs::read_dir(destination)
+                .expect("destination")
+                .next()
+                .is_none()
+        );
     }
 }

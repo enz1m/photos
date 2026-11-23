@@ -1,6 +1,7 @@
 photos-title = Photos
 photos-settings = Settings
 photos-import = Import photos
+photos-import-activity = Importing media
 photos-rescan = Rescan photos
 photos-search = Search photos…
 photos-library = Library

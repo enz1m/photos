@@ -1511,6 +1511,7 @@ impl Photos {
             }
             Message::ImportProgress(generation, progress) => {
                 if generation == self.import_generation && self.import_cancel.is_some() {
+                    self.import_activity.progress(progress);
                     self.import_progress = Some(progress);
                 }
             }
@@ -1524,6 +1525,7 @@ impl Photos {
                 if generation != self.import_generation {
                     return Task::none();
                 }
+                self.import_activity.finish(&result);
                 self.import_cancel = None;
                 self.import_progress = None;
                 self.busy = false;
@@ -1850,16 +1852,7 @@ impl Photos {
                 })
             }
             PickPurpose::Import => {
-                self.busy = true;
-                self.import_generation = self.import_generation.saturating_add(1);
-                let generation = self.import_generation;
-                let cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
-                self.import_cancel = Some(Arc::clone(&cancel));
-                self.import_progress_hidden = false;
-                self.import_progress = Some(crate::services::import::ImportProgress {
-                    completed: 0,
-                    total: 0,
-                });
+                let (generation, cancel) = self.begin_import(0);
                 let (progress, receiver, _) =
                     enzui_iced_core::worker_bridge::channel(std::num::NonZeroUsize::MIN);
                 let destination = self.import_destination().to_owned();
@@ -1888,10 +1881,7 @@ impl Photos {
                     Task::perform(work, move |settled| {
                         Message::ImportFinished(
                             generation,
-                            settled
-                                .into_result()
-                                .map_err(|e| e.to_string())
-                                .and_then(|r| r),
+                            crate::services::import::settled(settled),
                         )
                     }),
                 ])

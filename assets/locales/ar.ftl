@@ -1,6 +1,7 @@
 photos-title = الصور
 photos-settings = الإعدادات
 photos-import = استيراد الصور
+photos-import-activity = جارٍ استيراد الوسائط
 photos-rescan = إعادة فحص الصور
 photos-search = البحث في الصور…
 photos-library = المكتبة

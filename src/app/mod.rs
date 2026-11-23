@@ -2,6 +2,7 @@ mod chooser;
 pub(crate) mod cloud;
 pub(crate) mod cloud_sync;
 pub(crate) mod context;
+mod import_activity;
 mod message;
 mod native_drop;
 mod reduce;
@@ -136,6 +137,7 @@ impl Photos {
             import_progress: None,
             import_progress_hidden: false,
             import_cancel: None,
+            import_activity: Default::default(),
             dialog: None,
             dialogs: Default::default(),
             dialog_text: String::new(),
