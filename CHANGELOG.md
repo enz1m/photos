@@ -2,8 +2,7 @@
 
 ## 0.1.2
 
-- Improve the contrast of the selected tab.
-- Update enzUI and its paired iced fork for nonblocking Wayland presentation discovery.
+- The selected tab has stronger contrast, so it’s easier to see which photo view you’re in.
 
 ## 0.1.0 — initial release
 
