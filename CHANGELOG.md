@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Improve the contrast of the selected tab.
+- Update enzUI and its paired iced fork for nonblocking Wayland presentation discovery.
+
 ## 0.1.0 — initial release
 
 - Local photo/video browsing, virtual albums, favorites and native transfers.
