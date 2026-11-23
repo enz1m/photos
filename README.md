@@ -76,7 +76,7 @@ cargo build --locked
 cargo run --locked
 ```
 
-The framework uses the public [enzUI Alpha 0.2](https://github.com/enz1m/enzui/releases/tag/v0.2.0-alpha.1)
+The framework uses the public [enzUI source](https://github.com/enz1m/enzui)
 tag and pinned enzim foundation forks. No framework submodule or sibling checkout
 is needed. Wayland is enabled by default; add `--features x11` for an X11 build.
 
