@@ -33,6 +33,7 @@ fn button<'a>(
         Event::Preview(Some(id)) => format!("preview-{id}"),
         Event::Preview(None) => "preview-back".into(),
         Event::Connect => "connect".into(),
+        Event::ConnectInsecure => "connect-insecure".into(),
         Event::Refresh => "refresh".into(),
         Event::New => "new".into(),
         Event::Import => "import".into(),
@@ -332,16 +333,20 @@ fn connection(app: &Photos) -> Element<'_, Message> {
         if !state.status.is_empty() && idle {
             fields = fields.push(enz_text(&state.status).size(TextSize::Footnote));
         }
-        fields = fields.push(button(
-            state,
-            if form.account.is_some() {
-                "Save key"
-            } else {
-                "Connect"
-            },
-            Event::Connect,
-            idle,
-        ));
+        fields = fields.push(if state.insecure_url.is_some() {
+            button(state, "Connect anyway", Event::ConnectInsecure, idle)
+        } else {
+            button(
+                state,
+                if form.account.is_some() {
+                    "Save key"
+                } else {
+                    "Connect"
+                },
+                Event::Connect,
+                idle,
+            )
+        });
         body = body.push(fields);
     }
     body.into()

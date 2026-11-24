@@ -35,6 +35,7 @@ pub(crate) enum Event {
     Url(String),
     Key(ApiKey),
     Connect,
+    ConnectInsecure,
     EditKey(u64),
     CancelForm,
     ForgetAccount(u64),
@@ -124,6 +125,9 @@ pub(crate) struct State {
     pub album: Option<RemoteAlbum>,
     pub sync: super::cloud_sync::State,
     key_edit_target: Option<u64>,
+    // The plain-HTTP URL beyond the LAN the user was warned about, and the one they accepted.
+    pub insecure_url: Option<String>,
+    insecure_accepted: Option<String>,
     playback: Option<Arc<tempfile::TempDir>>,
     pub active: Option<u64>,
     pub name: String,
@@ -176,6 +180,8 @@ impl State {
             album: None,
             sync: super::cloud_sync::State::new(),
             key_edit_target: None,
+            insecure_url: None,
+            insecure_accepted: None,
             playback: None,
             active: None,
             name: "My Immich".into(),
@@ -994,6 +1000,7 @@ impl Photos {
                 self.cloud.status.clear();
             }
             Event::CancelForm => {
+                self.cloud.insecure_url = None;
                 self.cloud.retire();
                 self.cloud.form = None;
                 self.cloud.status.clear();
@@ -1005,6 +1012,7 @@ impl Photos {
                 }
             }
             Event::Url(value) => {
+                self.cloud.insecure_url = None;
                 if let Some(form) = &mut self.cloud.form {
                     form.url = value.chars().take(2048).collect();
                 }
@@ -1078,6 +1086,10 @@ impl Photos {
                     move |outcome| Message::Cloud(Event::Done(generation, Ok(outcome))),
                 );
             }
+            Event::ConnectInsecure => {
+                self.cloud.insecure_accepted = self.cloud.insecure_url.take();
+                return self.cloud_event(Event::Connect);
+            }
             Event::Connect => {
                 if self.catalog_authority.is_none() || self.persistence_blocked {
                     self.cloud.status =
@@ -1096,6 +1108,16 @@ impl Photos {
                         return Task::none();
                     }
                 };
+                if self.cloud.form.is_some()
+                    && remote::cleartext_beyond_lan(&url)
+                    && self.cloud.insecure_accepted.as_ref() != Some(&url)
+                {
+                    self.cloud.status = "This server isn't on your network and doesn't use \
+                        HTTPS, so the API key would travel unencrypted."
+                        .into();
+                    self.cloud.insecure_url = Some(url);
+                    return Task::none();
+                }
                 let name = self
                     .cloud
                     .form
@@ -2669,5 +2691,38 @@ mod tests {
                 .is_some_and(|error| error.contains("repeated"))
         );
         assert!(app.cloud.page.as_ref().expect("page").next.is_none());
+    }
+
+    #[test]
+    fn an_api_key_waits_for_consent_before_plain_http_beyond_the_lan() {
+        for (url, warned) in [
+            ("http://192.168.1.20:2283", false),
+            ("http://[fd00::20]:2283", false),
+            ("http://immich.local", false),
+            ("https://photos.example.com", false),
+            ("http://photos.example.com", true),
+            ("http://203.0.113.9:2283", true),
+        ] {
+            assert_eq!(remote::cleartext_beyond_lan(url), warned, "{url}");
+        }
+        let (mut app, _sandbox) = loaded();
+        dispatch(&mut app, Message::Cloud(Event::New));
+        dispatch(
+            &mut app,
+            Message::Cloud(Event::Url("http://photos.example.invalid".into())),
+        );
+        dispatch(
+            &mut app,
+            Message::Cloud(Event::Key(ApiKey::new("key".into()))),
+        );
+        dispatch(&mut app, Message::Cloud(Event::Connect));
+        assert!(app.cloud.insecure_url.is_some());
+        assert!(!app.cloud.busy);
+        let warning = app.cloud.status.clone();
+        dispatch(&mut app, Message::Cloud(Event::Connect));
+        assert_eq!(app.cloud.status, warning);
+        dispatch(&mut app, Message::Cloud(Event::ConnectInsecure));
+        assert!(app.cloud.insecure_url.is_none());
+        assert_ne!(app.cloud.status, warning);
     }
 }

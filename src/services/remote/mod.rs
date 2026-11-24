@@ -196,6 +196,24 @@ pub(crate) fn connect(account: &ServiceAccount, key: ApiKey) -> Result<Arc<dyn P
     }
 }
 
+// An API key sent to such a URL crosses networks the user does not control in clear.
+pub(crate) fn cleartext_beyond_lan(url: &str) -> bool {
+    let Ok(url) = url::Url::parse(url) else {
+        return false;
+    };
+    let local = match url.host() {
+        Some(url::Host::Ipv4(ip)) => ip.is_private() || ip.is_loopback() || ip.is_link_local(),
+        Some(url::Host::Ipv6(ip)) => {
+            ip.is_loopback() || ip.is_unique_local() || ip.is_unicast_link_local()
+        }
+        Some(url::Host::Domain(name)) => {
+            name == "localhost" || name.ends_with(".local") || name.ends_with(".lan")
+        }
+        None => false,
+    };
+    url.scheme() == "http" && !local
+}
+
 pub(crate) fn normalized_url(value: &str) -> Result<String> {
     ensure!(value.len() <= 2048, "Server URL is too long");
     let mut url =
