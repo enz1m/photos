@@ -4,7 +4,7 @@ use enzui_iced_widgets::button::{ButtonKind, ButtonSize, enz_button};
 use enzui_iced_widgets::icon::enz_icon;
 use enzui_iced_widgets::image::{EnzImageFit, enz_image_handle};
 use enzui_iced_widgets::pressable::{PressableStyle, enz_pressable};
-use enzui_iced_widgets::text::{TextSize, TextTone, enz_text};
+use enzui_iced_widgets::text::{TextAlign, TextSize, TextTone, enz_text};
 use enzui_iced_widgets::toolbar_icon::enz_toolbar_icon;
 use iced::widget::{Space, column, container, row};
 use iced::{Alignment, Element, Length};
@@ -52,19 +52,23 @@ pub(crate) fn view(
     {
         return body;
     }
-    let controls = super::controls::glass_chrome(
-        row![
-            enz_toolbar_icon("minus", Message::Density(-1))
-                .id(iced::advanced::widget::Id::new("photos-density-smaller"))
-                .aria_label(text("photos-smaller-thumbnails"))
-                .enabled(app.density > 0),
-            enz_toolbar_icon("plus", Message::Density(1))
-                .id(iced::advanced::widget::Id::new("photos-density-larger"))
-                .aria_label(text("photos-larger-thumbnails"))
-                .enabled(app.density < 7)
-        ]
-        .spacing(4.0),
-    );
+    let controls: Element<'_, Message> = if count == 0 {
+        Space::new().into()
+    } else {
+        super::controls::glass_chrome(
+            row![
+                enz_toolbar_icon("minus", Message::Density(-1))
+                    .id(iced::advanced::widget::Id::new("photos-density-smaller"))
+                    .aria_label(text("photos-smaller-thumbnails"))
+                    .enabled(app.density > 0),
+                enz_toolbar_icon("plus", Message::Density(1))
+                    .id(iced::advanced::widget::Id::new("photos-density-larger"))
+                    .aria_label(text("photos-larger-thumbnails"))
+                    .enabled(app.density < 7)
+            ]
+            .spacing(4.0),
+        )
+    };
     let selection: Element<'_, Message> = if app.selection.is_empty() {
         Space::new().into()
     } else {
@@ -424,8 +428,12 @@ fn empty(app: &Photos) -> Element<'_, Message> {
     container(
         column![
             enz_icon("images").size(48.0),
-            enz_text(heading).size(TextSize::Title2),
-            enz_text(body).tone(TextTone::Muted),
+            enz_text(heading)
+                .size(TextSize::Title2)
+                .align(TextAlign::Center),
+            enz_text(body)
+                .tone(TextTone::Muted)
+                .align(TextAlign::Center),
             enz_button(text("photos-import"), Message::Dialog(Dialog::Import))
                 .id(iced::advanced::widget::Id::new("photos-empty-import"))
                 .icon("import")
@@ -434,6 +442,7 @@ fn empty(app: &Photos) -> Element<'_, Message> {
         .spacing(16.0)
         .align_x(Alignment::Center),
     )
+    .padding([0.0, app.theme.theme().spacing.lg()])
     .center_x(Length::Fill)
     .center_y(Length::Fill)
     .into()
