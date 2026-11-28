@@ -21,6 +21,9 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.3" date="2026-11-28">
+      <description><p>Show photo imports in Live Activity and hide thumbnail size controls in empty galleries.</p></description>
+    </release>
     <release version="0.1.2" date="2026-11-23">
       <description>
         <p>The selected tab has stronger contrast, so it’s easier to see which photo view you’re in.</p>
